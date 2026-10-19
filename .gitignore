@@ -1,0 +1,11 @@
+.vendor/
+__pycache__/
+*.pyc
+*.log
+.vercel/
+.env
+.env.*
+node_modules/
+data/*.json
+!data/expansion-report.json
+data/*.tmp

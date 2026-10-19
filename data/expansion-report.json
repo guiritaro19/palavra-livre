@@ -1,0 +1,32 @@
+{
+  "pt": {
+    "words": 2712316,
+    "candidates": 2712327,
+    "seconds": 91.1
+  },
+  "es": {
+    "words": 655963,
+    "candidates": 655963,
+    "seconds": 8.1
+  },
+  "en": {
+    "words": 77892,
+    "candidates": 77892,
+    "seconds": 1.0
+  },
+  "id": {
+    "words": 147936,
+    "candidates": 523401,
+    "seconds": 6.5
+  },
+  "fr": {
+    "words": 430724,
+    "candidates": 430724,
+    "seconds": 11.7
+  },
+  "it": {
+    "words": 3128624,
+    "candidates": 3128624,
+    "seconds": 90.0
+  }
+}

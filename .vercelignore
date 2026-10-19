@@ -1,0 +1,11 @@
+.git
+.vendor
+__pycache__
+node_modules
+data/sources
+data/*.json
+*.log
+*.py
+*.cjs
+*.cmd
+*.md
