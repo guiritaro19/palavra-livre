@@ -2,7 +2,7 @@ import sys, json, random, pathlib, time
 ROOT=pathlib.Path(__file__).parent
 sys.path.insert(0,str(ROOT/'.vendor'))
 from spylls.hunspell import Dictionary
-codes=sys.argv[1:] or ['pt','es','en','id','fr','it']
+codes=sys.argv[1:] or ['pt','es','en']
 for code in codes:
     start=time.monotonic()
     words=json.loads((ROOT/'data'/f'{code}.json').read_text(encoding='utf-8'))

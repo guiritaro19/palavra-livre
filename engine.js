@@ -13,21 +13,37 @@
   }
   function lowerBound(keys,key){let lo=0,hi=keys.length;while(lo<hi){const mid=(lo+hi)>>>1;if(keys[mid]<key)lo=mid+1;else hi=mid;}return lo;}
   function upperBound(keys,key){let lo=0,hi=keys.length;while(lo<hi){const mid=(lo+hi)>>>1;if(keys[mid]<=key)lo=mid+1;else hi=mid;}return lo;}
-  function search(index,prefix,enabled,used,limit=60){
-    const key=normalize(prefix);if(!key||!/^[\p{L}]+$/u.test(key))return {rows:[],total:0};
+  function search(index,prefix,enabled,used,limit=60,suffix=''){
+    const key=normalize(prefix),ending=normalize(suffix);
+    if((!key&&!ending)||(key&&!/^[\p{L}]+$/u.test(key))||(ending&&!/^[\p{L}]+$/u.test(ending)))return {rows:[],total:0};
     const groups=[];let total=0;
     const blocked=[...used].filter(word=>word.startsWith(key));
     for(const code of enabled){
       const bucket=index[code];if(!bucket)continue;
-      const {words,keys}=bucket,start=lowerBound(keys,key),end=lowerBound(keys,key+'\uffff');
-      total+=end-start;
-      for(const word of blocked)total-=upperBound(keys,word)-lowerBound(keys,word);
+      const {words,keys}=bucket,start=key?lowerBound(keys,key):0,end=key?lowerBound(keys,key+'\uffff'):keys.length;
       const matches=[];
-      for(let i=start;i<end&&matches.length<limit;i++)if(!used.has(keys[i]))matches.push({word:words[i],key:keys[i],code});
-      groups.push(matches);
+      if(!ending){
+        total+=end-start;
+        for(const word of blocked)total-=upperBound(keys,word)-lowerBound(keys,word);
+        for(let i=start;i<end&&matches.length<limit;i++)if(!used.has(keys[i]))matches.push({word:words[i],key:keys[i],code});
+      }else{
+        for(let i=start;i<end;i++)if(keys[i].endsWith(ending)&&!used.has(keys[i])){
+          total++;if(matches.length<limit)matches.push({word:words[i],key:keys[i],code});
+        }
+      }
+      groups.push({matches,position:0});
     }
     const rows=[];
-    for(let i=0;rows.length<limit;i++){let found=false;for(const group of groups){if(group[i]){found=true;rows.push(group[i]);if(rows.length===limit)break;}}if(!found)break;}
+    // Merge the sorted language lists so pagination stays alphabetical globally.
+    while(rows.length<limit){
+      let selected=null;
+      for(const group of groups){
+        const row=group.matches[group.position];if(!row)continue;
+        const best=selected?.matches[selected.position];
+        if(!best||compare(row.key,best.key)<0||(row.key===best.key&&(compare(row.word,best.word)<0||(row.word===best.word&&compare(row.code,best.code)<0))))selected=group;
+      }
+      if(!selected)break;rows.push(selected.matches[selected.position++]);
+    }
     return {rows,total};
   }
   const api={normalize,createIndex,search};if(typeof module!=='undefined')module.exports=api;else root.WordEngine=api;

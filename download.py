@@ -3,7 +3,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / '.vendor'))
 from spylls.hunspell import Dictionary
 from spylls.hunspell.algo.lookup import AffixForm
-CODES = ['pt','es','en','id','fr','it']
+CODES = ['pt','es','en']
 ACCENTS=dict.fromkeys(range(0x300,0x370))
 
 def is_word(word):
