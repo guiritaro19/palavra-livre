@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const html=fs.readFileSync(__dirname+'/index.html','utf8');
-const data={pt:['casa','casas','ade','café'],es:['amable','casa'],en:['actually','apply','gently','box']};
+const data={pt:['casa','casas','ade','café'],es:['amable','casa'],en:['actually','apply','gently','box'],id:['rumah','rumahan']};
 async function launch(storage=new Map()){
   let document;
   class Element{
@@ -24,8 +24,10 @@ async function launch(storage=new Map()){
 (async()=>{
   const ui=await launch();const e=ui.elements;
   assert(!e.prefix.disabled&&!e.suffix.disabled);
-  assert.equal(e.languages.children.length,3);assert(!e.languages.textContent.includes('Francês'));
-  ui.type('suffix','ly');assert.deepEqual(ui.words(),['Usar actually, Inglês','Usar apply, Inglês','Usar gently, Inglês']);
+  assert.equal(e.languages.children.length,4);assert(!e.languages.textContent.includes('Francês'));
+  ui.type('prefix','rum');assert(ui.words().includes('Usar rumah, Indonésio'));
+  e.languages.children[3].click();assert(!ui.words().some(w=>w.includes('Indonésio')));e.languages.children[3].click();
+  ui.type('prefix','');ui.type('suffix','ly');assert.deepEqual(ui.words(),['Usar actually, Inglês','Usar apply, Inglês','Usar gently, Inglês']);
   ui.type('prefix','a');assert.deepEqual(ui.words(),['Usar actually, Inglês','Usar apply, Inglês']);
   e.results.children[0].click();assert.equal(e['used-count'].textContent,'1');assert.deepEqual(ui.words(),['Usar apply, Inglês']);
   const reloaded=await launch(ui.storage);reloaded.type('prefix','a');reloaded.type('suffix','ly');assert.deepEqual(reloaded.words(),['Usar apply, Inglês']);
@@ -33,5 +35,5 @@ async function launch(storage=new Map()){
   e['clear-suffix'].click();assert.equal(e.suffix.value,'');assert.equal(e.prefix.value,'a');assert(ui.words().some(word=>word.includes('amable')));
   ui.type('suffix','a1');assert(e.results.textContent.includes('Use apenas letras'));
   e.reset.click();assert.equal(e.prefix.value,'');assert.equal(e.suffix.value,'');assert.equal(e['used-count'].textContent,'0');
-  console.log('Controles aprovados: três idiomas, final sozinho, filtros combinados, clique, recarga, desfazer, limpar final e nova sessão.');
+  console.log('Controles aprovados: quatro idiomas, final sozinho, filtros combinados, clique, recarga, desfazer, limpar final e nova sessão.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

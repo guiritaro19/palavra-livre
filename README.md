@@ -1,6 +1,6 @@
 # Palavra Livre
 
-Ferramenta local para encontrar palavras pelo início e pelo final em português, espanhol e inglês.
+Ferramenta local para encontrar palavras pelo início e pelo final em português, espanhol, inglês e indonésio.
 
 ## Abrir
 
@@ -14,11 +14,11 @@ Também é possível abrir com `iniciar.cmd`, que usa Node.js para servir em htt
 - Clique numa palavra para marcá-la como usada. A mesma grafia normalizada sai de todos os idiomas (por exemplo, selecionar `café` também oculta `cafe`).
 - Palavras usadas permanecem na sessão desta aba, inclusive após atualizar. As letras pesquisadas não excluem palavras: só o clique faz isso.
 - Use os botões de idiomas para filtrar, “Desfazer última” para corrigir um clique e “Nova sessão” para zerar.
-- Resultados dos três idiomas aparecem juntos em ordem alfabética. “Mostrar mais” revela os próximos.
+- Resultados dos quatro idiomas aparecem juntos em ordem alfabética. “Mostrar mais” revela os próximos.
 
 ## Dicionários e limites
 
-A base inclui entradas e flexões (plurais, conjugações e outras formas) obtidas pelas regras de prefixos, sufixos e continuação dos dicionários Hunspell. Cada forma é conferida pelo validador Spylls antes de entrar na busca, sem geração por IA. São excluídos nomes próprios iniciados em maiúscula, entradas com números/pontuação/espaços e formas proibidas ou válidas apenas dentro de compostos. Não enumeramos compostos arbitrários; a cobertura depende das regras de cada dicionário. Dicionários ortográficos podem conter regionalismos, termos raros e imprecisões; estar na base não garante aceitação pelas regras de qualquer jogo. Não há definições ou revisão editorial individual de cada entrada.
+A parte Hunspell da base inclui entradas e flexões (plurais, conjugações e outras formas) obtidas pelas regras de prefixos, sufixos e continuação dos dicionários Hunspell. Cada forma gerada pelo Hunspell é conferida pelo validador Spylls antes de entrar na busca, sem geração por IA. São excluídos nomes próprios iniciados em maiúscula, entradas com números/pontuação/espaços e formas proibidas ou válidas apenas dentro de compostos. Não enumeramos compostos arbitrários; a cobertura depende das regras de cada dicionário. Dicionários ortográficos podem conter regionalismos, termos raros e imprecisões; estar na base não garante aceitação pelas regras de qualquer jogo. Não há definições ou revisão editorial individual de cada entrada. Os complementos inglês e português têm proveniência e critérios próprios descritos em data/SOURCES.md.
 
 As bandeiras representam o idioma (Brasil, Espanha e Reino Unido), não a etimologia ou exclusividade geográfica da palavra.
 
@@ -42,3 +42,9 @@ Criado por [Leo Yanaguihara](https://github.com/guiritaro19). Projeto estático 
 A base completa é compactada com gzip e embutida em `data/words.js`; o navegador a descompacta localmente. Use um navegador atual com suporte a DecompressionStream (Chrome, Edge, Firefox ou Safari). Não há backend nem envio das palavras pesquisadas. `node pack-data.cjs` compacta uma base bruta; `download.py` já executa esse passo ao reconstruir.
 
 Licenças dos dicionários e das bandeiras estão em `licenses/`; os fontes originais dos dicionários ficam em `data/sources/`. As licenças próprias desses dados devem ser preservadas ao redistribuir.
+
+## Atualização do vocabulário — 31/10/2026
+
+Indonésio: Hunspell de shuLhan/hunspell-id, com expansão validada pelo Spylls. Inglês: união exata da base Hunspell com data/sources/en-solver.txt. Português: adições e rejeições pontuais em data/sources/pt-confirmed.txt e pt-rejected.txt. Veja data/SOURCES.md para proveniência e limites. Nenhum complemento é apresentado como dicionário oficial do Roblox.
+
+Para reconstruir todos os idiomas, execute download.py; para gerar só indonésio, download.py id. A publicação consolidada exige os quatro JSONs intermediários. Os complementos são reaplicados na consolidação, sem perder as fontes. validate_expansion.py confere as bases Hunspell intermediárias antes dos complementos.

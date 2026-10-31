@@ -13,5 +13,10 @@
     "words": 77892,
     "candidates": 77892,
     "seconds": 1
+  },
+  "id": {
+    "words": 147936,
+    "candidates": 523401,
+    "seconds": 5.7
   }
 }

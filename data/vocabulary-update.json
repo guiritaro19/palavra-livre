@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-31",
+  "before": {
+    "pt": 2712316,
+    "es": 655963,
+    "en": 77892
+  },
+  "after": {
+    "pt": 2712317,
+    "es": 655963,
+    "en": 147313,
+    "id": 147936
+  },
+  "englishAdded": 69421,
+  "portugueseRemoved": [
+    "inconstitucionalissimamente"
+  ],
+  "indonesianValidation": {
+    "sample": 1500,
+    "validator": "Spylls 0.1.7",
+    "passed": true
+  }
+}

@@ -1,4 +1,4 @@
-const LANGUAGES = [{code:'pt',name:'Português',flag:'br'},{code:'es',name:'Espanhol',flag:'es'},{code:'en',name:'Inglês',flag:'gb'}];
+const LANGUAGES = [{code:'pt',name:'Português',flag:'br'},{code:'es',name:'Espanhol',flag:'es'},{code:'en',name:'Inglês',flag:'gb'},{code:'id',name:'Indonésio',flag:'id'}];
 const $ = id => document.getElementById(id);
 const STORAGE='palavra-livre.session.v1';
 const enabled=new Set(LANGUAGES.map(l=>l.code));
@@ -33,4 +33,4 @@ $('undo').onclick=()=>{const last=history.pop();if(!last)return;save();renderHis
 $('reset').onclick=()=>{if(history.length&&!confirm('Começar uma nova sessão e liberar todas as palavras usadas?'))return;history=[];save();$('prefix').value='';$('suffix').value='';limit=60;renderHistory();render();$('prefix').focus();};
 document.addEventListener('keydown',event=>{if(event.key==='/'&&document.activeElement.tagName!=='INPUT'&&!event.ctrlKey&&!event.metaKey){event.preventDefault();$('prefix').focus();}});
 renderHistory();
-setTimeout(async()=>{try{if(window.WORDS_READY)await window.WORDS_READY;if(!window.DICTIONARIES)throw Error('missing');index=WordEngine.createIndex(window.DICTIONARIES);const total=Object.values(window.DICTIONARIES).reduce((sum,words)=>sum+words.length,0);$('dictionary-count').textContent=`${total.toLocaleString('pt-BR')} entradas · 3 idiomas · busca local`;$('prefix').disabled=false;$('suffix').disabled=false;render();$('prefix').focus();}catch{$('result-count').textContent='Não foi possível carregar os dicionários.';$('results').replaceChildren(empty('Os dicionários não carregaram','Confira se a pasta data está junto do site e atualize a página.'));}},0);
+setTimeout(async()=>{try{if(window.WORDS_READY)await window.WORDS_READY;if(!window.DICTIONARIES)throw Error('missing');index=WordEngine.createIndex(window.DICTIONARIES);const total=Object.values(window.DICTIONARIES).reduce((sum,words)=>sum+words.length,0);$('dictionary-count').textContent=`${total.toLocaleString('pt-BR')} entradas · ${LANGUAGES.length} idiomas · busca local`;$('prefix').disabled=false;$('suffix').disabled=false;render();$('prefix').focus();}catch{$('result-count').textContent='Não foi possível carregar os dicionários.';$('results').replaceChildren(empty('Os dicionários não carregaram','Confira se a pasta data está junto do site e atualize a página.'));}},0);

@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const engine=require('./engine.js');
-const codes=['pt','es','en'];
+const codes=['pt','es','en','id'];
 const order=(a,b)=>a.key<b.key?-1:a.key>b.key?1:a.word<b.word?-1:a.word>b.word?1:a.code<b.code?-1:a.code>b.code?1:0;
 function reference(data,prefix,suffix,enabled,used){
   const p=engine.normalize(prefix),s=engine.normalize(suffix);
@@ -17,10 +17,18 @@ function reference(data,prefix,suffix,enabled,used){
     assert.equal(result.total,expected.length,`${prefix}/${suffix}: contagem`);
     assert.deepEqual(result.rows,expected.slice(0,3),`${prefix}/${suffix}: ordem e paginação`);
   }
-  console.log('224 combinações de começo/final/idiomas: contagem, acentos, sobreposição, exclusão e paginação aprovadas.');
+  console.log('Combinações de começo/final/idiomas: contagem, acentos, sobreposição, exclusão e paginação aprovadas.');
   const data=await require('./load-data.cjs')();
-  assert.deepEqual(Object.keys(data).sort(),['en','es','pt']);
+  assert.deepEqual(Object.keys(data).sort(),['en','es','id','pt']);
+  assert(data.id.includes('rumah'));
+  assert(data.en.includes('campinas'));
+  assert(data.en.includes('playing'));
+  assert(data.pt.includes('saojosedoscampos'));
+  assert(data.pt.includes('açúcardebeterraba'));
+  assert(!data.pt.includes('inconstitucionalissimamente'));
   const index=engine.createIndex(data);
+  assert(engine.search(index,'rum',['id'],new Set(),1000).rows.some(r=>r.word==='rumah'));
+  assert(!engine.search(index,'rum',['id'],new Set(['rumah']),1000).rows.some(r=>r.word==='rumah'));
   const cases=[['a',''],['de',''],['os',''],['','ly'],['a','ly'],['c','ade'],['ostent','as'],['','x'],['c','fé'],['zzzz','ade']];
   const used=new Set(['casa','ostentas','actually']);
   for(const [prefix,suffix] of cases){
@@ -47,6 +55,6 @@ function reference(data,prefix,suffix,enabled,used){
   const ostent=engine.search(index,'ostent',['pt'],new Set(['ostentar']),10000,'as');
   assert(ostent.rows.some(row=>row.word==='ostentas'));
   assert(!ostent.rows.some(row=>row.word==='ostentar'));
-  console.log('Aprovado: três idiomas, flexões preservadas, filtros combinados e memória de palavras usadas.');
+  console.log('Aprovado: quatro idiomas, flexões preservadas, filtros combinados e memória de palavras usadas.');
   console.log('Entradas:',Object.values(data).reduce((sum,words)=>sum+words.length,0));
 })().catch(error=>{console.error(error);process.exitCode=1;});

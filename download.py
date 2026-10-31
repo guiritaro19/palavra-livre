@@ -3,7 +3,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / '.vendor'))
 from spylls.hunspell import Dictionary
 from spylls.hunspell.algo.lookup import AffixForm
-CODES = ['pt','es','en']
+CODES = ['pt','es','en','id']
 ACCENTS=dict.fromkeys(range(0x300,0x370))
 
 def is_word(word):
@@ -93,8 +93,17 @@ if __name__=='__main__':
     selected=sys.argv[1:] or CODES
     with concurrent.futures.ProcessPoolExecutor(max_workers=3) as pool:
         reports=dict(pool.map(load,selected))
+    report_path=ROOT/'data'/'expansion-report.json'
+    previous=json.loads(report_path.read_text(encoding='utf-8')) if report_path.exists() else {}
+    previous.update(reports)
+    reports=previous
     if all((ROOT/'data'/f'{code}.json').exists() for code in CODES):
         result={code:json.loads((ROOT/'data'/f'{code}.json').read_text(encoding='utf-8')) for code in CODES}
+        for code,filename in [('en','en-solver.txt'),('pt','pt-confirmed.txt')]:
+            extra=(ROOT/'data'/'sources'/filename).read_text(encoding='utf-8').splitlines()
+            result[code]=sorted(set(result[code])|{w for w in extra if w and w.isalpha() and w==w.lower()},key=lambda w:(unicodedata.normalize('NFD',w).translate(ACCENTS).lower(),w))
+        rejected=set((ROOT/'data'/'sources'/'pt-rejected.txt').read_text(encoding='utf-8').splitlines())
+        result['pt']=[w for w in result['pt'] if w not in rejected]
         target=ROOT/'data'/'words.js'
         temporary=target.with_suffix('.tmp')
         temporary.write_text('window.DICTIONARIES = '+json.dumps(result,ensure_ascii=False,separators=(',',':'))+';',encoding='utf-8')

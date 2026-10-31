@@ -9,3 +9,5 @@ node_modules/
 data/*.json
 !data/expansion-report.json
 data/*.tmp
+
+!data/vocabulary-update.json
