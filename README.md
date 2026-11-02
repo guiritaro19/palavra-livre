@@ -14,7 +14,7 @@ Também é possível abrir com `iniciar.cmd`, que usa Node.js para servir em htt
 - Clique numa palavra para marcá-la como usada. A mesma grafia normalizada sai de todos os idiomas (por exemplo, selecionar `café` também oculta `cafe`).
 - Palavras usadas permanecem na sessão desta aba, inclusive após atualizar. As letras pesquisadas não excluem palavras: só o clique faz isso.
 - Use os botões de idiomas para filtrar, “Desfazer última” para corrigir um clique e “Nova sessão” para zerar.
-- Resultados dos quatro idiomas aparecem juntos em ordem alfabética. “Mostrar mais” revela os próximos.
+- Resultados dos quatro idiomas aparecem juntos em ordem alfabética por padrão. Em “Ordenar por”, escolha “Mais letras primeiro” ou “Menos letras primeiro” para ordenar pelo número de letras; empates seguem a ordem alfabética. “Mostrar mais” revela os próximos.
 
 ## Dicionários e limites
 

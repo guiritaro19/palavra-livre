@@ -2,18 +2,20 @@ const assert=require('node:assert/strict');
 const engine=require('./engine.js');
 const codes=['pt','es','en','id'];
 const order=(a,b)=>a.key<b.key?-1:a.key>b.key?1:a.word<b.word?-1:a.word>b.word?1:a.code<b.code?-1:a.code>b.code?1:0;
-function reference(data,prefix,suffix,enabled,used){
+const count=row=>Array.from(engine.normalize(row.word)).length;
+const sortedOrder=sort=>(a,b)=>(sort==='length-asc'?count(a)-count(b):sort==='length-desc'?count(b)-count(a):0)||order(a,b);
+function reference(data,prefix,suffix,enabled,used,sort='alphabetical'){
   const p=engine.normalize(prefix),s=engine.normalize(suffix);
   if((!p&&!s)||(p&&!/^[\p{L}]+$/u.test(p))||(s&&!/^[\p{L}]+$/u.test(s)))return [];
-  return enabled.flatMap(code=>(data[code]||[]).map(word=>({word,key:engine.normalize(word),code}))).filter(row=>row.key.startsWith(p)&&row.key.endsWith(s)&&!used.has(row.key)).sort(order);
+  return enabled.flatMap(code=>(data[code]||[]).map(word=>({word,key:engine.normalize(word),code}))).filter(row=>row.key.startsWith(p)&&row.key.endsWith(s)&&!used.has(row.key)).sort(sortedOrder(sort));
 }
 (async()=>{
   const fixture={pt:['café','casa','casas','casamente','cade','camarade','aba','ababa','a'],es:['cafe','casa','casas','amable','ababa'],en:['actually','apply','ade','absolutely','box']};
   const small=engine.createIndex(fixture);
-  for(const prefix of ['','a','ca','CAFÉ','ababa','x','a1'])for(const suffix of ['','a','as','ade','ly','fé','ababa','x1'])for(const enabled of [codes,['pt'],['en'],[]]){
+  for(const prefix of ['','a','ca','CAFÉ','ababa','x','a1'])for(const suffix of ['','a','as','ade','ly','fé','ababa','x1'])for(const enabled of [codes,['pt'],['en'],[]])for(const sort of ['alphabetical','length-asc','length-desc']){
     const used=new Set(['casa','cafe']);
-    const expected=reference(fixture,prefix,suffix,enabled,used);
-    const result=engine.search(small,prefix,enabled,used,3,suffix);
+    const expected=reference(fixture,prefix,suffix,enabled,used,sort);
+    const result=engine.search(small,prefix,enabled,used,3,suffix,sort);
     assert.equal(result.total,expected.length,`${prefix}/${suffix}: contagem`);
     assert.deepEqual(result.rows,expected.slice(0,3),`${prefix}/${suffix}: ordem e paginação`);
   }
@@ -31,9 +33,9 @@ function reference(data,prefix,suffix,enabled,used){
   assert(!engine.search(index,'rum',['id'],new Set(['rumah']),1000).rows.some(r=>r.word==='rumah'));
   const cases=[['a',''],['de',''],['os',''],['','ly'],['a','ly'],['c','ade'],['ostent','as'],['','x'],['c','fé'],['zzzz','ade']];
   const used=new Set(['casa','ostentas','actually']);
-  for(const [prefix,suffix] of cases){
+  for(const [prefix,suffix] of cases)for(const sort of ['alphabetical','length-asc','length-desc']){
     const start=performance.now();
-    const result=engine.search(index,prefix,codes,used,120,suffix);
+    const result=engine.search(index,prefix,codes,used,120,suffix,sort);
     const elapsed=performance.now()-start;
     const p=engine.normalize(prefix),s=engine.normalize(suffix);
     let expected=0;
@@ -41,10 +43,12 @@ function reference(data,prefix,suffix,enabled,used){
     assert.equal(result.total,expected,`${prefix}/${suffix}`);
     assert.equal(result.rows.length,Math.min(expected,120));
     assert(result.rows.every(row=>row.key.startsWith(p)&&row.key.endsWith(s)&&!used.has(row.key)));
-    assert(result.rows.every((row,i)=>!i||order(result.rows[i-1],row)<=0));
-    const shorter=engine.search(index,prefix,codes,used,60,suffix);
+    assert(result.rows.every((row,i)=>!i||sortedOrder(sort)(result.rows[i-1],row)<=0));
+    const shorter=engine.search(index,prefix,codes,used,60,suffix,sort);
     assert.deepEqual(shorter.rows,result.rows.slice(0,60));
-    console.log(`${prefix||'∅'} / ${suffix||'∅'}: ${result.total} resultados; busca ${elapsed.toFixed(2)} ms`);
+    const expectedRows=reference(data,prefix,suffix,codes,used,sort).slice(0,120);
+    assert.deepEqual(result.rows,expectedRows,`ordenação global ${sort}: ${prefix}/${suffix}`);
+    console.log(`${sort}: ${prefix||'∅'} / ${suffix||'∅'}: ${result.total} resultados; busca ${elapsed.toFixed(2)} ms`);
   }
   for(const [code,words] of Object.entries({pt:['ostentas','ostentava','ostentávamos','casas','ações'],es:['hablamos','hablaban','casas'],en:['plays','played','playing','cats','actually']})){
     for(const word of words){
