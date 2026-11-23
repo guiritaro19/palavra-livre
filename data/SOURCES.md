@@ -13,3 +13,10 @@ Atualizado em 31/10/2026.
 São José dos Campos consta no Wikcionário: https://pt.wiktionary.org/wiki/São_José_dos_Campos . Açúcar de beterraba pode ser uma expressão concatenada; o Glosbe atribui a forma açúcardebeterraba ao FreeDict: https://pt.glosbe.com/en/pt/beetroot%20sugar . São pistas de listas derivadas de dicionários com remoção de espaços/hífens, não identificação confirmada da fonte do bot.
 
 Contagens maiores ou validação ortográfica não garantem compatibilidade com o jogo. Apenas rejeições documentadas devem ser removidas; plurais/conjugações adicionais não são todos necessariamente aceitos pelo bot.
+
+## Camadas — 23/11/2026
+
+- Frequência do português: FrequencyWords (https://github.com/hermitdave/FrequencyWords), `content/2018/pt_br/pt_br_full.txt`, derivada do OpenSubtitles2018. Conteúdo CC-BY-SA-4.0. A lista não é redistribuída neste repositório; é usada só como critério de corte em `build_layers.py`.
+- Adições PT confirmadas por `/lookup` e `/prefix` do Word Bot em 23/11/2026: estadosunidosdaamérica, emquantidadesuficiente, exércitodasalvação, estaçãobalneária, esternocleidomastoideu, soparussadebeterraba, sociolingüística, aachen, aardwark, baamas, cabaret, cabarets, aa, a, ostentaríeis.
+- PT rejeitadas pelo bot: desenfueiradíssimo, descarbonizadorezinhos, hexadáctilo, encornetei (além das anteriores).
+- Hipóteses descartadas: FreeDict inglês-português e o ispell brasileiro (br.ispell/wbrazilian) não reproduzem a lista do bot. A fonte real do bot continua desconhecida.

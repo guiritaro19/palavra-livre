@@ -5,3 +5,5 @@ footer{flex-wrap:wrap}.signature{flex-basis:100%;margin:0;text-align:center;font
 .ending-field{margin-top:20px}#result-title{overflow-wrap:anywhere}#result-count{flex-shrink:0}
 
 .sort-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 18px}.sort-control label{margin:0;color:var(--muted);font-size:13px}.sort-control select{font:inherit;font-size:14px;color:var(--green);background:var(--paper);border:1px solid #9cab9b;border-radius:7px;padding:10px 12px;min-height:44px;max-width:100%;cursor:pointer}.sort-control select:hover{border-color:var(--green)}.sort-control select:focus-visible{outline:3px solid #b5602b;outline-offset:4px}.sort-control select:disabled{cursor:default;opacity:.45}
+
+.rare-toggle{display:flex;align-items:flex-start;gap:10px;margin:0 0 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}.rare-toggle input{width:auto;margin:2px 0 0;accent-color:var(--green);flex-shrink:0}.rare-toggle small{display:block;font-weight:400;font-size:12px;opacity:.85}.rare-toggle:has(input:disabled){opacity:.55;cursor:default}.word-language.rare{color:#8a5a2b}

@@ -3,8 +3,10 @@ const $ = id => document.getElementById(id);
 const STORAGE='palavra-livre.session.v1';
 $('sort').value='alphabetical';
 const enabled=new Set(LANGUAGES.map(l=>l.code));
-let history=[],index,limit=60,toastTimer;
+let history=[],index,limit=60,toastTimer,rare=false,extrasLoaded=false,extrasLoading=null;
 try {const saved=JSON.parse(sessionStorage.getItem(STORAGE)||'[]');if(Array.isArray(saved))history=saved.filter(x=>x&&typeof x.word==='string'&&/^[\p{L}]+$/u.test(x.word)&&LANGUAGES.some(l=>l.code===x.code));}catch{}
+const languageOf=code=>LANGUAGES.find(l=>l.code===(code==='pt-extra'?'pt':code));
+const activeCodes=()=>{const codes=new Set(enabled);if(rare&&extrasLoaded&&enabled.has('pt'))codes.add('pt-extra');return codes;};
 const used=()=>new Set(history.map(x=>WordEngine.normalize(x.word)));
 function save(){try{sessionStorage.setItem(STORAGE,JSON.stringify(history));}catch{notify('Memória da aba indisponível. A sessão será mantida até atualizar a página.');}}
 function flag(language){const img=document.createElement('img');img.className='flag';img.src=`flags/${language.flag}.svg`;img.alt='';return img;}
@@ -12,7 +14,7 @@ function notify(message){$('toast').textContent=message;$('toast').hidden=false;
 for(const language of LANGUAGES){const b=document.createElement('button');b.className='language';b.type='button';b.append(flag(language),document.createTextNode(language.name));b.setAttribute('aria-pressed','true');b.addEventListener('click',()=>{if(enabled.has(language.code))enabled.delete(language.code);else enabled.add(language.code);b.setAttribute('aria-pressed',String(enabled.has(language.code)));limit=60;render();});$('languages').append(b);}
 function renderHistory(){
   $('used-count').textContent=history.length;$('undo').disabled=!history.length;$('used-empty').hidden=!!history.length;
-  $('used-list').replaceChildren(...history.slice().reverse().map(row=>{const item=document.createElement('span');item.className='used-item';item.append(flag(LANGUAGES.find(l=>l.code===row.code)),document.createTextNode(row.word));return item;}));
+  $('used-list').replaceChildren(...history.slice().reverse().map(row=>{const item=document.createElement('span');item.className='used-item';item.append(flag(languageOf(row.code)),document.createTextNode(row.word));return item;}));
 }
 function empty(title,description,examples=false){const box=document.createElement('div');box.className='empty';const strong=document.createElement('strong');strong.textContent=title;const p=document.createElement('p');p.textContent=description;box.append(strong,p);if(examples){const wrap=document.createElement('div');wrap.className='examples';for(const prefix of ['a','de','ka','ade']){const b=document.createElement('button');b.textContent=prefix;b.onclick=()=>{$('prefix').value=prefix;limit=60;render();$('prefix').focus();};wrap.append(b);}box.append(wrap);}return box;}
 function render(){
@@ -20,12 +22,31 @@ function render(){
   const prefix=$('prefix').value.trim(),suffix=$('suffix').value.trim(),key=WordEngine.normalize(prefix),ending=WordEngine.normalize(suffix);$('clear').hidden=!prefix;$('clear-suffix').hidden=!suffix;$('more').hidden=true;
   if(!prefix&&!suffix){$('result-title').textContent='Sua próxima palavra';$('result-count').textContent='';$('results').replaceChildren(empty('Como é a sua palavra?','Digite o começo, o final ou os dois para encontrar sua próxima jogada.',true));return;}
   $('result-title').textContent=prefix&&suffix?`De “${prefix}” a “${suffix}”`:prefix?`Começando com “${prefix}”`:`Terminando com “${suffix}”`;
-  const found=WordEngine.search(index,prefix,enabled,used(),limit,suffix,$('sort').value);$('result-count').textContent=`${found.total.toLocaleString('pt-BR')} resultados`;
+  const found=WordEngine.search(index,prefix,activeCodes(),used(),limit,suffix,$('sort').value);$('result-count').textContent=`${found.total.toLocaleString('pt-BR')} resultados`;
   if(!found.total){$('results').replaceChildren(empty(!enabled.size?'Escolha um idioma':'Nenhuma palavra disponível',!enabled.size?'Ative um dos idiomas acima para pesquisar.':((key&&!/^[\p{L}]+$/u.test(key))||(ending&&!/^[\p{L}]+$/u.test(ending)))?'Use apenas letras, sem espaços ou números.':'Tente outro começo ou final, ative mais idiomas ou desfaça uma palavra usada.'));return;}
   const fragment=document.createDocumentFragment();
-  for(const row of found.rows){const language=LANGUAGES.find(l=>l.code===row.code),button=document.createElement('button');button.className='word';button.type='button';button.setAttribute('aria-label',`Usar ${row.word}, ${language.name}`);const main=document.createElement('span');main.className='word-main';const text=document.createElement('span');text.className='word-text';let start=0;while(start<row.word.length){const highlighted=position=>(key&&position<key.length)||(ending&&position>=row.word.length-ending.length);let end=start+1;while(end<row.word.length&&Boolean(highlighted(end))===Boolean(highlighted(start)))end++;const part=highlighted(start)?document.createElement('mark'):document.createElement('span');part.textContent=row.word.slice(start,end);text.append(part);start=end;}const name=document.createElement('span');name.className='word-language';name.textContent=language.name;main.append(text,name);const tail=document.createElement('span');tail.className='word-tail';const plus=document.createElement('span');plus.className='plus';plus.textContent='+';plus.setAttribute('aria-hidden','true');tail.append(flag(language),plus);button.append(main,tail);button.addEventListener('click',()=>{if(used().has(row.key))return;history.push({word:row.word,code:row.code});save();renderHistory();render();notify(`${row.word} foi jogada`);$('prefix').focus();});fragment.append(button);}
+  for(const row of found.rows){const language=languageOf(row.code),isRare=row.code==='pt-extra',button=document.createElement('button');button.className='word';button.type='button';button.setAttribute('aria-label',`Usar ${row.word}, ${language.name}${isRare?' (rara)':''}`);const main=document.createElement('span');main.className='word-main';const text=document.createElement('span');text.className='word-text';let start=0;while(start<row.word.length){const highlighted=position=>(key&&position<key.length)||(ending&&position>=row.word.length-ending.length);let end=start+1;while(end<row.word.length&&Boolean(highlighted(end))===Boolean(highlighted(start)))end++;const part=highlighted(start)?document.createElement('mark'):document.createElement('span');part.textContent=row.word.slice(start,end);text.append(part);start=end;}const name=document.createElement('span');name.className='word-language'+(isRare?' rare':'');name.textContent=isRare?`${language.name} · rara, não confirmada`:language.name;main.append(text,name);const tail=document.createElement('span');tail.className='word-tail';const plus=document.createElement('span');plus.className='plus';plus.textContent='+';plus.setAttribute('aria-hidden','true');tail.append(flag(language),plus);button.append(main,tail);button.addEventListener('click',()=>{if(used().has(row.key))return;history.push({word:row.word,code:language.code});save();renderHistory();render();notify(`${row.word} foi jogada`);$('prefix').focus();});fragment.append(button);}
   $('results').replaceChildren(fragment);$('more').hidden=found.rows.length>=found.total;
 }
+function loadExtras(){
+  if(extrasLoaded)return Promise.resolve();
+  if(extrasLoading)return extrasLoading;
+  extrasLoading=(async()=>{
+    if(!window.EXTRAS_READY){await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='data/extras-pt.js?v=camadas-1';script.onload=resolve;script.onerror=()=>reject(Error('extras'));(document.head||document.body).append(script);});}
+    await window.EXTRAS_READY;
+    Object.assign(index,WordEngine.createIndex({'pt-extra':window.EXTRAS.pt}));
+    extrasLoaded=true;
+  })();
+  extrasLoading.catch(()=>{extrasLoading=null;});
+  return extrasLoading;
+}
+$('rare').addEventListener('change',async()=>{
+  rare=$('rare').checked;limit=60;const status=$('rare-status');
+  if(!rare||extrasLoaded){status.hidden=true;render();return;}
+  status.hidden=false;status.textContent='Carregando as palavras raras (cerca de 9 MB, só desta vez)…';$('rare').disabled=true;
+  try{await loadExtras();status.hidden=true;}catch{rare=false;$('rare').checked=false;status.textContent='Não foi possível carregar as palavras raras. Tente de novo.';}
+  $('rare').disabled=false;render();
+});
 for(const id of ['prefix','suffix'])$(id).addEventListener('input',()=>{limit=60;render();});
 $('clear').onclick=()=>{$('prefix').value='';limit=60;render();$('prefix').focus();};
 $('clear-suffix').onclick=()=>{$('suffix').value='';limit=60;render();$('suffix').focus();};
@@ -35,4 +56,4 @@ $('undo').onclick=()=>{const last=history.pop();if(!last)return;save();renderHis
 $('reset').onclick=()=>{if(history.length&&!confirm('Começar uma nova sessão e liberar todas as palavras usadas?'))return;history=[];save();$('prefix').value='';$('suffix').value='';$('sort').value='alphabetical';limit=60;renderHistory();render();$('prefix').focus();};
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)&&!event.ctrlKey&&!event.metaKey){event.preventDefault();$('prefix').focus();}});
 renderHistory();
-setTimeout(async()=>{try{if(window.WORDS_READY)await window.WORDS_READY;if(!window.DICTIONARIES)throw Error('missing');index=WordEngine.createIndex(window.DICTIONARIES);const total=Object.values(window.DICTIONARIES).reduce((sum,words)=>sum+words.length,0);$('dictionary-count').textContent=`${total.toLocaleString('pt-BR')} entradas · ${LANGUAGES.length} idiomas · busca local`;$('prefix').disabled=false;$('suffix').disabled=false;$('sort').disabled=false;render();$('prefix').focus();}catch{$('result-count').textContent='Não foi possível carregar os dicionários.';$('results').replaceChildren(empty('Os dicionários não carregaram','Confira se a pasta data está junto do site e atualize a página.'));}},0);
+setTimeout(async()=>{try{if(window.WORDS_READY)await window.WORDS_READY;if(!window.DICTIONARIES)throw Error('missing');index=WordEngine.createIndex(window.DICTIONARIES);const total=Object.values(window.DICTIONARIES).reduce((sum,words)=>sum+words.length,0);$('dictionary-count').textContent=`${total.toLocaleString('pt-BR')} entradas básicas · ${LANGUAGES.length} idiomas · busca local`;$('prefix').disabled=false;$('suffix').disabled=false;$('rare').disabled=false;$('sort').disabled=false;render();$('prefix').focus();}catch{$('result-count').textContent='Não foi possível carregar os dicionários.';$('results').replaceChildren(empty('Os dicionários não carregaram','Confira se a pasta data está junto do site e atualize a página.'));}},0);

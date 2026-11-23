@@ -17,7 +17,7 @@ async function launch(storage=new Map()){
   const elements=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(match=>[match[1],new Element(['prefix','suffix'].includes(match[1])?'input':'div')]));
   document={activeElement:new Element(),getElementById:id=>{assert(elements[id],`Falta #${id}`);return elements[id];},createElement:tag=>new Element(tag),createTextNode:text=>{const node=new Element('text');node.textContent=text;return node;},createDocumentFragment:()=>new Element('fragment'),addEventListener(){}};
   const timers=[];
-  const context={document,window:{DICTIONARIES:data},WordEngine:require('./engine.js'),sessionStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){},confirm:()=>true};
+  const context={document,window:{DICTIONARIES:data,EXTRAS_READY:Promise.resolve(),EXTRAS:{pt:['caseira','cafezal']}},WordEngine:require('./engine.js'),sessionStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){},confirm:()=>true};
   vm.runInNewContext(fs.readFileSync(__dirname+'/app.js','utf8'),context);await timers.shift()();
   return {elements,storage,type:(id,value)=>{elements[id].value=value;elements[id].events.input();},words:()=>elements.results.children.filter(node=>node.className==='word').map(node=>node.attributes['aria-label'])};
 }
@@ -41,5 +41,14 @@ async function launch(storage=new Map()){
   e['clear-suffix'].click();assert.equal(e.suffix.value,'');assert.equal(e.prefix.value,'a');assert(ui.words().some(word=>word.includes('amable')));
   ui.type('suffix','a1');assert(e.results.textContent.includes('Use apenas letras'));
   e.reset.click();assert.equal(e.prefix.value,'');assert.equal(e.suffix.value,'');assert.equal(e['used-count'].textContent,'0');assert.equal(e.sort.value,'alphabetical');
+  // Camada rara: desligada por padrão, liga sob demanda e identifica a palavra.
+  assert(!e.rare.checked&&!e.rare.disabled);
+  ui.type('prefix','ca');assert.deepEqual(ui.words(),['Usar café, Português','Usar casa, Espanhol','Usar casa, Português','Usar casas, Português']);
+  e.rare.checked=true;await e.rare.events.change();
+  assert(ui.words().includes('Usar caseira, Português (rara)')&&ui.words().includes('Usar cafezal, Português (rara)'));
+  e.results.children.find(n=>n.className==='word'&&n.attributes['aria-label'].includes('caseira')).click();
+  assert.equal(JSON.parse(ui.storage.get('palavra-livre.session.v1'))[0].code,'pt');
+  e.rare.checked=false;await e.rare.events.change();assert(!ui.words().some(w=>w.includes('(rara)')));
+  e.undo.click();
   console.log('Controles aprovados: quatro idiomas, final sozinho, filtros combinados, clique, recarga, desfazer, limpar final e nova sessão.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

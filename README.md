@@ -48,3 +48,16 @@ Licenças dos dicionários e das bandeiras estão em `licenses/`; os fontes orig
 Indonésio: Hunspell de shuLhan/hunspell-id, com expansão validada pelo Spylls. Inglês: união exata da base Hunspell com data/sources/en-solver.txt. Português: adições e rejeições pontuais em data/sources/pt-confirmed.txt e pt-rejected.txt. Veja data/SOURCES.md para proveniência e limites. Nenhum complemento é apresentado como dicionário oficial do Roblox.
 
 Para reconstruir todos os idiomas, execute download.py; para gerar só indonésio, download.py id. A publicação consolidada exige os quatro JSONs intermediários. Os complementos são reaplicados na consolidação, sem perder as fontes. validate_expansion.py confere as bases Hunspell intermediárias antes dos complementos.
+
+## Camadas do português — 23/11/2026
+
+O português agora tem duas camadas, para carregar rápido e continuar aceitando tudo:
+
+- **Básica** (`data/words.js`, carregada sempre): formas que aparecem em legendas reais (lista de frequência FrequencyWords, OpenSubtitles, CC-BY-SA-4.0), formas de raízes muito frequentes com até 3 letras de diferença e sem prefixo, e as adições confirmadas no Word Bot (`data/sources/pt-confirmed.txt`, inclusive expressões coladas como `estadosunidosdaamérica`). Cerca de 256 mil palavras.
+- **Rara** (`data/extras-pt.js`, baixada só quando a pessoa marca “Incluir palavras raras”): o restante da expansão Hunspell, marcada como “rara, não confirmada” nos resultados. Cerca de 2,46 milhões de formas.
+
+Espanhol, inglês e indonésio continuam inteiros na camada básica.
+
+A regra foi calibrada com trechos do `/prefix` do Word Bot: com ela ficam 53 de 60 palavras aceitas pelo bot e cerca de 4% de falsos positivos nesses trechos. O bot não é um dicionário oficial: não use a camada básica como garantia. Palavras confirmadas por teste entram em `pt-confirmed.txt` e rejeitadas em `pt-rejected.txt`; depois rode `python build_layers.py` (precisa de `.vendor/spylls`, baixa a lista de frequência para `data/sources/pt_br_full.txt` se faltar, e executa `pack-data.cjs`). Ao publicar uma base nova, troque o `?v=` dos scripts em `index.html` e em `app.js` (os arquivos de dados têm cache de um ano).
+
+`node test-layers.cjs` confere as camadas (sem repetição, confirmadas na básica, rejeitadas fora). `teste-bot/` guarda as listas usadas para consultar o bot.

@@ -11,3 +11,4 @@ data/*.json
 data/*.tmp
 
 !data/vocabulary-update.json
+data/sources/pt_br_full.txt
